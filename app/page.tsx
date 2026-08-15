@@ -42,6 +42,8 @@ type CommandGroup = {
   commands: CommandItem[];
 };
 
+type CommandFilter = "All" | "Right now" | "Tokens" | "Traders" | "My network" | "Signals and alerts";
+
 type Situation = {
   type: string;
   title: string;
@@ -228,6 +230,15 @@ const commandGroups: CommandGroup[] = [
 ];
 
 const commands = commandGroups.flatMap((group) => group.commands);
+
+const commandFilters: { label: string; value: CommandFilter }[] = [
+  { label: "All", value: "All" },
+  { label: "Now", value: "Right now" },
+  { label: "Tokens", value: "Tokens" },
+  { label: "Traders", value: "Traders" },
+  { label: "Network", value: "My network" },
+  { label: "Alerts", value: "Signals and alerts" },
+];
 
 const situations: Situation[] = [
   {
@@ -518,6 +529,7 @@ export default function Home() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [commandsOpen, setCommandsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [commandFilter, setCommandFilter] = useState<CommandFilter>("All");
   const [commandIndex, setCommandIndex] = useState(0);
   const conversationRef = useRef<HTMLDivElement>(null);
   const commandListRef = useRef<HTMLDivElement>(null);
@@ -530,6 +542,12 @@ export default function Home() {
   );
 
   const selectedThesis = theses.find((thesis) => thesis.handle === selectedHandle) ?? theses[0];
+
+  const filteredCommandGroups = commandFilter === "All"
+    ? commandGroups
+    : commandGroups.filter((group) => group.label === commandFilter);
+
+  const filteredCommandCount = filteredCommandGroups.reduce((total, group) => total + group.commands.length, 0);
 
   const visibleCommands = useMemo(() => {
     const typed = query.trim().toLowerCase();
@@ -728,6 +746,21 @@ export default function Home() {
           </div>
 
           <div className="conversation" aria-live="polite" ref={conversationRef}>
+            {analyses.map((analysis) => (
+              <div className="analysis-turn" key={analysis.id}>
+                <div className="query-row"><span>You asked</span><code>{analysis.query}</code></div>
+                <div className="analysis-result">
+                  <div className="response-meta"><span>Thesis Scout</span><time>Now</time></div>
+                  <h3>{analysis.heading}</h3>
+                  <p>{analysis.summary}</p>
+                  <ul>{analysis.facts.map((fact) => <li key={fact}>{fact}</li>)}</ul>
+                  <div className="evidence-line"><span>{analysis.evidence}</span><button onClick={() => chooseCommand("/why SIGNAL-1842")}>Explain</button></div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="chat-dock">
             <div className="query-guide">
               <div className="query-guide-copy">
                 <span className="context-label">TOP {cohort} · {window} {rankBy.toUpperCase()} · LAST 24H</span>
@@ -750,19 +783,6 @@ export default function Home() {
               </ol>
               <div className="evidence-line"><span>Based on watched-trader activity and current positions</span><button onClick={() => chooseCommand("/catchup 20m")}>Open catch-up</button></div>
             </div>
-
-            {analyses.map((analysis) => (
-              <div className="analysis-turn" key={analysis.id}>
-                <div className="query-row"><span>You asked</span><code>{analysis.query}</code></div>
-                <div className="analysis-result">
-                  <div className="response-meta"><span>Thesis Scout</span><time>Now</time></div>
-                  <h3>{analysis.heading}</h3>
-                  <p>{analysis.summary}</p>
-                  <ul>{analysis.facts.map((fact) => <li key={fact}>{fact}</li>)}</ul>
-                  <div className="evidence-line"><span>{analysis.evidence}</span><button onClick={() => chooseCommand("/why SIGNAL-1842")}>Explain</button></div>
-                </div>
-              </div>
-            ))}
           </div>
 
           <form className="composer" onSubmit={submitQuery}>
@@ -827,8 +847,21 @@ export default function Home() {
             <button aria-label="Close shortcuts" onClick={() => setShortcutsOpen(false)}>Close</button>
           </div>
           <p className="shortcut-intro">Choose a command to add it to chat. Type <code>/</code> to search instead.</p>
+          <div aria-label="Filter commands" className="shortcut-filters" role="group">
+            {commandFilters.map((filter) => (
+              <button
+                aria-pressed={commandFilter === filter.value}
+                className={commandFilter === filter.value ? "selected" : ""}
+                key={filter.value}
+                onClick={() => setCommandFilter(filter.value)}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+          <div className="shortcut-count">{filteredCommandCount} commands</div>
           <nav className="shortcut-groups">
-            {commandGroups.map((group) => (
+            {filteredCommandGroups.map((group) => (
               <section key={group.label}>
                 <h3>{group.label}</h3>
                 {group.commands.map((command) => (

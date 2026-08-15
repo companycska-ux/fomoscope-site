@@ -33,6 +33,9 @@ test("server-renders the FOMO research workspace", async () => {
   assert.match(html, /Important updates/);
   assert.match(html, /Ask the market/);
   assert.match(html, /All commands/);
+  assert.match(html, /Filter commands/);
+  assert.match(html, />Network<\/button>/);
+  assert.match(html, />Alerts<\/button>/);
   assert.match(html, /Preview data/);
   assert.match(html, /Right now/);
   assert.match(html, /My network/);
@@ -55,8 +58,16 @@ test("keeps the command browser compact, complete, and keyboard-ready", async ()
   assert.match(page, /role="listbox"/);
   assert.match(css, /\.slash-command-list\s*\{[^}]*max-height:\s*210px[^}]*overflow-y:\s*auto/s);
   assert.match(css, /\.shortcut-groups\s*\{[^}]*overflow-y:\s*auto/s);
+  assert.match(css, /\.shortcut-filters\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*1fr\)/s);
+  assert.match(css, /\.shortcut-groups\s+code\s*\{[^}]*font-size:\s*11px/s);
+  assert.match(css, /\.shortcut-groups\s+span\s*\{[^}]*font-size:\s*10\.5px/s);
   assert.match(css, /\.situation-row\s*>\s*p\s*\{[^}]*font-size:\s*13px/s);
   assert.match(css, /\.situation-row\s+dt\s*\{[^}]*font-size:\s*11px/s);
   assert.match(css, /\.situation-row\s+dd\s*\{[^}]*font-size:\s*11px[^}]*overflow-wrap:\s*anywhere/s);
   assert.doesNotMatch(css, /\.situation-row\s+dd\s*\{[^}]*white-space:\s*nowrap/s);
+
+  const conversationIndex = page.indexOf('className="conversation"');
+  const dockIndex = page.indexOf('className="chat-dock"');
+  const composerIndex = page.indexOf('className="composer"');
+  assert.ok(conversationIndex >= 0 && dockIndex > conversationIndex && composerIndex > dockIndex);
 });
