@@ -273,7 +273,9 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [commandsOpen, setCommandsOpen] = useState(false);
+  const [commandIndex, setCommandIndex] = useState(0);
   const conversationRef = useRef<HTMLDivElement>(null);
+  const commandListRef = useRef<HTMLDivElement>(null);
 
   const visibleTheses = useMemo(
     () => theses
@@ -284,11 +286,24 @@ export default function Home() {
 
   const selectedThesis = theses.find((thesis) => thesis.handle === selectedHandle) ?? theses[0];
 
+  const visibleCommands = useMemo(() => {
+    const typed = query.trim().toLowerCase();
+    if (!typed.startsWith("/") || typed === "/") return commands;
+    return commands.filter(([command]) => command.toLowerCase().startsWith(typed));
+  }, [query]);
+
   useEffect(() => {
     if (!analyses.length) return;
     const conversation = conversationRef.current;
     conversation?.scrollTo({ top: conversation.scrollHeight, behavior: "smooth" });
   }, [analyses]);
+
+  useEffect(() => {
+    if (!commandsOpen) return;
+    commandListRef.current
+      ?.querySelector<HTMLElement>("[aria-selected='true']")
+      ?.scrollIntoView({ block: "nearest" });
+  }, [commandIndex, commandsOpen]);
 
   function runQuery(nextQuery: string) {
     const trimmed = nextQuery.trim();
@@ -305,7 +320,36 @@ export default function Home() {
   function chooseCommand(command: string) {
     setQuery(command);
     setCommandsOpen(false);
+    setCommandIndex(0);
     requestAnimationFrame(() => document.getElementById("message")?.focus());
+  }
+
+  function updateQuery(value: string) {
+    setQuery(value);
+    setCommandIndex(0);
+    setCommandsOpen(value.startsWith("/"));
+  }
+
+  function handleComposerKey(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (!commandsOpen || !visibleCommands.length) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setCommandsOpen(false);
+      return;
+    }
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      setCommandIndex((current) => (current + direction + visibleCommands.length) % visibleCommands.length);
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      chooseCommand(visibleCommands[commandIndex]?.[0] ?? visibleCommands[0][0]);
+    }
   }
 
   return (
@@ -410,7 +454,7 @@ export default function Home() {
               <h2>Ask the market</h2>
             </div>
             <div className="chat-actions">
-              <button className="quiet-button command-toggle" onClick={() => setCommandsOpen(true)}>Commands</button>
+              <button className="quiet-button" onClick={() => { setQuery("/"); setCommandsOpen(true); setCommandIndex(0); requestAnimationFrame(() => document.getElementById("message")?.focus()); }}>Commands</button>
               <button className="quiet-button" onClick={() => setAnalyses([])}>Clear</button>
             </div>
           </div>
@@ -451,38 +495,51 @@ export default function Home() {
           </div>
 
           <form className="composer" onSubmit={submitQuery}>
-            <label htmlFor="message">Ask about traders, tokens, positions, or signals</label>
-            <div className="composer-row">
-              <input id="message" onChange={(event) => setQuery(event.target.value)} placeholder="Ask a question or type / for commands" value={query} />
-              <button disabled={!query.trim()} type="submit">Send</button>
+            <div className="composer-inner">
+              {commandsOpen && query.startsWith("/") && (
+                <div className="slash-menu" aria-label="Available commands">
+                  <div className="slash-menu-heading">
+                    <span>Commands</span>
+                    <small>{visibleCommands.length ? `${Math.min(5, visibleCommands.length)} shown · ${visibleCommands.length} total` : "No matches"}</small>
+                  </div>
+                  <div className="slash-command-list" id="command-menu" ref={commandListRef} role="listbox">
+                    {visibleCommands.map(([command, description], index) => (
+                      <button
+                        aria-selected={commandIndex === index}
+                        className={commandIndex === index ? "selected" : ""}
+                        key={command}
+                        onClick={() => chooseCommand(command)}
+                        onMouseEnter={() => setCommandIndex(index)}
+                        role="option"
+                        type="button"
+                      >
+                        <code>{command}</code>
+                        <span>{description}</span>
+                      </button>
+                    ))}
+                    {!visibleCommands.length && <p className="command-empty">No command starts with “{query}”.</p>}
+                  </div>
+                </div>
+              )}
+              <label htmlFor="message">Ask about traders, tokens, positions, or signals</label>
+              <div className="composer-row">
+                <input
+                  aria-controls={commandsOpen ? "command-menu" : undefined}
+                  aria-expanded={commandsOpen}
+                  aria-haspopup="listbox"
+                  autoComplete="off"
+                  id="message"
+                  onChange={(event) => updateQuery(event.target.value)}
+                  onKeyDown={handleComposerKey}
+                  placeholder="Ask a question or type / for commands"
+                  value={query}
+                />
+                <button disabled={!query.trim()} type="submit">Send</button>
+              </div>
+              <span className="composer-hint">Context: @{selectedThesis.handle} · {selectedThesis.token} · Demo data, not financial advice</span>
             </div>
-            <span className="composer-hint">Context: @{selectedThesis.handle} · {selectedThesis.token} · Demo data, not financial advice</span>
           </form>
         </section>
-
-        <aside className={`command-pane ${commandsOpen ? "open" : ""}`} aria-label="Available commands">
-          <div className="command-heading">
-            <div className="command-title-row">
-              <div><p className="eyebrow">COMMANDS</p><h2>Shortcuts</h2></div>
-              <button className="command-close" onClick={() => setCommandsOpen(false)}>Close</button>
-            </div>
-            <p>Click a command to add it to chat.</p>
-          </div>
-          <div className="command-list">
-            {commands.map(([command, description]) => (
-              <button key={command} onClick={() => chooseCommand(command)}>
-                <code>{command}</code>
-                <span>{description}</span>
-              </button>
-            ))}
-          </div>
-          <div className="command-example">
-            <span>SELECTED THESIS</span>
-            <code>@{selectedThesis.handle} · {selectedThesis.token}</code>
-            <p>{selectedThesis.followers} followers · {selectedThesis.winRate} win rate · position remains open.</p>
-          </div>
-        </aside>
-        {commandsOpen && <button aria-label="Close commands" className="command-backdrop" onClick={() => setCommandsOpen(false)} />}
       </div>
     </main>
   );
