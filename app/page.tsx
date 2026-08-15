@@ -17,7 +17,6 @@ type Thesis = {
   pnl: string;
   likes: number;
   replies: number;
-  accent: string;
   followers: string;
   winRate: string;
   ranks: Record<Window, Record<RankMetric, number>>;
@@ -44,7 +43,6 @@ const theses: Thesis[] = [
     pnl: "+$23.23K",
     likes: 293,
     replies: 18,
-    accent: "ice",
     followers: "31.8K",
     winRate: "78%",
     ranks: {
@@ -63,7 +61,6 @@ const theses: Thesis[] = [
     pnl: "+$41.08K",
     likes: 184,
     replies: 31,
-    accent: "gold",
     followers: "18.4K",
     winRate: "72%",
     ranks: {
@@ -82,7 +79,6 @@ const theses: Thesis[] = [
     pnl: "+$12.74K",
     likes: 128,
     replies: 9,
-    accent: "orange",
     followers: "42.1K",
     winRate: "69%",
     ranks: {
@@ -101,7 +97,6 @@ const theses: Thesis[] = [
     pnl: "+$8.91K",
     likes: 97,
     replies: 14,
-    accent: "violet",
     followers: "9.7K",
     winRate: "64%",
     ranks: {
@@ -120,7 +115,6 @@ const theses: Thesis[] = [
     pnl: "+$6.26K",
     likes: 82,
     replies: 7,
-    accent: "blue",
     followers: "25.5K",
     winRate: "74%",
     ranks: {
@@ -139,7 +133,6 @@ const theses: Thesis[] = [
     pnl: "+$3.72K",
     likes: 61,
     replies: 12,
-    accent: "coral",
     followers: "6.2K",
     winRate: "81%",
     ranks: {
@@ -310,6 +303,7 @@ export default function Home() {
     if (!trimmed) return;
     setAnalyses((current) => [...current, buildAnalysis(trimmed, Date.now())]);
     setQuery("");
+    setCommandsOpen(false);
   }
 
   function submitQuery(event: FormEvent<HTMLFormElement>) {
@@ -327,7 +321,7 @@ export default function Home() {
   function updateQuery(value: string) {
     setQuery(value);
     setCommandIndex(0);
-    setCommandsOpen(value.startsWith("/"));
+    setCommandsOpen(value.startsWith("/") && (!query.startsWith("/") || commandsOpen));
   }
 
   function handleComposerKey(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -343,6 +337,12 @@ export default function Home() {
       event.preventDefault();
       const direction = event.key === "ArrowDown" ? 1 : -1;
       setCommandIndex((current) => (current + direction + visibleCommands.length) % visibleCommands.length);
+      return;
+    }
+
+    if (event.key === "Home" || event.key === "End") {
+      event.preventDefault();
+      setCommandIndex(event.key === "Home" ? 0 : visibleCommands.length - 1);
       return;
     }
 
@@ -373,26 +373,24 @@ export default function Home() {
             <span className="result-count">{visibleTheses.length} matching</span>
           </div>
 
-          <div className="filter-stack" aria-label="Thesis ranking filters">
-            <div className="filter-row">
-              <span className="filter-label">Cohort</span>
-              <div className="segments" aria-label="Trader cohort">
+          <div className="filter-toolbar" aria-label="Thesis ranking filters">
+            <div className="toolbar-control cohort-control">
+              <span className="toolbar-label">Cohort</span>
+              <div className="content-switcher" aria-label="Trader cohort" role="group">
                 {([100, 50, 20] as Cohort[]).map((value) => (
                   <button aria-pressed={cohort === value} className={cohort === value ? "selected" : ""} key={value} onClick={() => setCohort(value)}>Top {value}</button>
                 ))}
               </div>
             </div>
-            <div className="filter-row filter-row-scroll">
-              <span className="filter-label">Rank by</span>
-              <div className="filter-options">
-                {(["Followers", "PnL", "Win rate", "Unrealized"] as RankMetric[]).map((value) => (
-                  <button aria-pressed={rankBy === value} className={rankBy === value ? "selected" : ""} key={value} onClick={() => setRankBy(value)}>{value}</button>
-                ))}
-              </div>
-            </div>
-            <div className="filter-row compact">
-              <span className="filter-label">Window</span>
-              <div className="segments narrow" aria-label="Ranking window">
+            <label className="toolbar-control sort-control">
+              <span className="toolbar-label">Rank by</span>
+              <select value={rankBy} onChange={(event) => setRankBy(event.target.value as RankMetric)}>
+                {(["Followers", "PnL", "Win rate", "Unrealized"] as RankMetric[]).map((value) => <option key={value}>{value}</option>)}
+              </select>
+            </label>
+            <div className="toolbar-control period-control">
+              <span className="toolbar-label">Period</span>
+              <div className="content-switcher" aria-label="Ranking window" role="group">
                 {(["7D", "1M"] as Window[]).map((value) => (
                   <button aria-pressed={window === value} className={window === value ? "selected" : ""} key={value} onClick={() => setWindow(value)}>{value}</button>
                 ))}
@@ -404,35 +402,29 @@ export default function Home() {
             {visibleTheses.length ? visibleTheses.map((thesis) => {
               const rank = thesis.ranks[window][rankBy];
               return (
-                <article
-                  className={`thesis-card ${selectedHandle === thesis.handle ? "active" : ""}`}
-                  key={thesis.handle}
-                >
-                  <div className="thesis-author">
-                    <div className={`avatar ${thesis.accent}`}>{thesis.initials}</div>
-                    <div className="author-copy">
-                      <div className="author-line">
-                        <strong>@{thesis.handle}</strong>
-                        <span className="thesis-badge">Thesis</span>
-                        <time>{thesis.age}</time>
+                <article className={`thesis-row ${selectedHandle === thesis.handle ? "active" : ""}`} key={thesis.handle}>
+                  <button className="thesis-select" onClick={() => setSelectedHandle(thesis.handle)}>
+                    <div className="thesis-author">
+                      <span className="rank-cell">{rank}</span>
+                      <div className="avatar">{thesis.initials}</div>
+                      <div className="author-copy">
+                        <div className="author-line">
+                          <strong>@{thesis.handle}</strong>
+                          <span className="thesis-badge">Thesis</span>
+                          <time>{thesis.age}</time>
+                        </div>
+                        <span className="rank-line">Top {cohort} · {window} {rankBy}</span>
                       </div>
-                      <span className="rank-line">#{rank} · Top {cohort} by {window} {rankBy}</span>
                     </div>
-                  </div>
-                  <p className="thesis-copy">{thesis.copy}</p>
-                  <div className="position-card">
-                    <div className={`token-mark ${thesis.accent}`}>{thesis.token.slice(0, 2)}</div>
-                    <div className="token-copy">
+                    <p className="thesis-copy">{thesis.copy}</p>
+                    <div className="position-row">
                       <strong>{thesis.token}</strong>
-                      <span>{thesis.tokenName} · Open</span>
+                      <span>{thesis.tokenName} · Open · {thesis.position}</span>
+                      <b>{thesis.pnl}</b>
                     </div>
-                    <div className="position-value">
-                      <strong>{thesis.position}</strong>
-                      <span>{thesis.pnl}</span>
-                    </div>
-                  </div>
+                  </button>
                   <div className="engagement">
-                    <span>♡ {thesis.likes}</span>
+                    <span>{thesis.likes} likes</span>
                     <span>{thesis.replies} replies</span>
                     <button onClick={() => { setSelectedHandle(thesis.handle); chooseCommand(`/theses trader @${thesis.handle}`); }}>Use in chat</button>
                   </div>
@@ -460,11 +452,14 @@ export default function Home() {
           </div>
 
           <div className="conversation" aria-live="polite" ref={conversationRef}>
-            <div className="welcome-block">
-              <span className="context-label">TOP {cohort} · {window} {rankBy.toUpperCase()} · LAST 24H</span>
-              <h3>What are FOMO&apos;s best traders talking about?</h3>
-              <p>Ask naturally or use a command. Every answer stays linked to the traders, theses, and live positions behind it.</p>
-              <div className="prompt-pair">
+            <div className="query-guide">
+              <div className="query-guide-copy">
+                <span className="context-label">TOP {cohort} · {window} {rankBy.toUpperCase()} · LAST 24H</span>
+                <strong>Ranked thesis research</strong>
+                <p>Answers stay linked to traders, theses, and open positions.</p>
+              </div>
+              <div className="prompt-list" aria-label="Suggested questions">
+                <span>Suggested</span>
                 {defaultPrompts.map((prompt) => <button key={prompt} onClick={() => runQuery(prompt)}>{prompt}</button>)}
               </div>
             </div>
@@ -502,15 +497,17 @@ export default function Home() {
                     <span>Commands</span>
                     <small>{visibleCommands.length ? `${Math.min(5, visibleCommands.length)} shown · ${visibleCommands.length} total` : "No matches"}</small>
                   </div>
-                  <div className="slash-command-list" id="command-menu" ref={commandListRef} role="listbox">
+                  <div aria-label="Commands" className="slash-command-list" id="command-menu" ref={commandListRef} role="listbox">
                     {visibleCommands.map(([command, description], index) => (
                       <button
+                        id={`command-option-${index}`}
                         aria-selected={commandIndex === index}
                         className={commandIndex === index ? "selected" : ""}
                         key={command}
                         onClick={() => chooseCommand(command)}
                         onMouseEnter={() => setCommandIndex(index)}
                         role="option"
+                        tabIndex={-1}
                         type="button"
                       >
                         <code>{command}</code>
@@ -524,6 +521,8 @@ export default function Home() {
               <label htmlFor="message">Ask about traders, tokens, positions, or signals</label>
               <div className="composer-row">
                 <input
+                  aria-activedescendant={commandsOpen && visibleCommands.length ? `command-option-${commandIndex}` : undefined}
+                  aria-autocomplete="list"
                   aria-controls={commandsOpen ? "command-menu" : undefined}
                   aria-expanded={commandsOpen}
                   aria-haspopup="listbox"
@@ -532,6 +531,8 @@ export default function Home() {
                   onChange={(event) => updateQuery(event.target.value)}
                   onKeyDown={handleComposerKey}
                   placeholder="Ask a question or type / for commands"
+                  role="combobox"
+                  spellCheck={false}
                   value={query}
                 />
                 <button disabled={!query.trim()} type="submit">Send</button>
