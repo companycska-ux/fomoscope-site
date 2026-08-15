@@ -62,17 +62,17 @@ h1, h2 { margin-bottom: 0; font-size: 15px; line-height: 1.2; letter-spacing: -.
 .sort-control select { width: 100%; height: 28px; padding: 0 7px; border: 1px solid #303038; border-radius: 3px; background: #0b0b10; color: #d5d5db; font-size: 10px; }
 
 .feed-list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #2b2834 transparent; }
-.situation-row { padding: 11px 12px 9px; border-bottom: 1px solid var(--line-soft); }
+.situation-row { padding: 12px 14px 11px; border-bottom: 1px solid var(--line-soft); }
 .situation-heading { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 7px; }
-.situation-heading span { color: #aaa6ff; font-size: 8px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; }
-.situation-heading strong { overflow: hidden; color: #e5e5e9; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.situation-heading time { color: var(--quiet); font-size: 10px; font-variant-numeric: tabular-nums; }
-.situation-row > p { margin: 7px 0 8px; color: #c8c8cf; font-size: 11px; line-height: 1.4; }
-.situation-row dl { margin: 0; padding: 6px 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
-.situation-row dl > div { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 6px; margin: 3px 0; }
-.situation-row dt { color: var(--quiet); font-size: 9px; }
-.situation-row dd { margin: 0; overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-.situation-row > button { display: block; margin: 6px 0 0 auto; padding: 2px 0; border: 0; background: transparent; color: #aaa6ff; font-size: 9px; cursor: pointer; }
+.situation-heading span { color: #aaa6ff; font-size: 9px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.situation-heading strong { overflow: hidden; color: #ededf0; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.situation-heading time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.situation-row > p { margin: 9px 0 10px; color: #d3d3d9; font-size: 13px; line-height: 1.45; }
+.situation-row dl { margin: 0; padding: 7px 0; border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.situation-row dl > div { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 8px; margin: 5px 0; }
+.situation-row dt { color: #777782; font-size: 11px; line-height: 1.35; }
+.situation-row dd { margin: 0; color: #a4a4ae; font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+.situation-row > button { display: block; margin: 8px 0 0 auto; padding: 2px 0; border: 0; background: transparent; color: #b3afff; font-size: 11px; cursor: pointer; }
 .thesis-row { position: relative; border-bottom: 1px solid var(--line-soft); }
 .thesis-row::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 2px; background: transparent; }
 .thesis-row:hover { background: #0d0d12; }

@@ -55,4 +55,8 @@ test("keeps the command browser compact, complete, and keyboard-ready", async ()
   assert.match(page, /role="listbox"/);
   assert.match(css, /\.slash-command-list\s*\{[^}]*max-height:\s*210px[^}]*overflow-y:\s*auto/s);
   assert.match(css, /\.shortcut-groups\s*\{[^}]*overflow-y:\s*auto/s);
+  assert.match(css, /\.situation-row\s*>\s*p\s*\{[^}]*font-size:\s*13px/s);
+  assert.match(css, /\.situation-row\s+dt\s*\{[^}]*font-size:\s*11px/s);
+  assert.match(css, /\.situation-row\s+dd\s*\{[^}]*font-size:\s*11px[^}]*overflow-wrap:\s*anywhere/s);
+  assert.doesNotMatch(css, /\.situation-row\s+dd\s*\{[^}]*white-space:\s*nowrap/s);
 });
