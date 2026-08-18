@@ -23,51 +23,39 @@ async function render() {
   );
 }
 
-test("server-renders the FOMO research workspace", async () => {
+test("server-renders the Fomoscope product site", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /FOMO Thesis Scout/i);
-  assert.match(html, /Important updates/);
-  assert.match(html, /Ask the market/);
-  assert.match(html, /All commands/);
-  assert.match(html, /Filter commands/);
-  assert.match(html, />Network<\/button>/);
-  assert.match(html, />Alerts<\/button>/);
+  assert.match(html, /fomoscope/i);
+  assert.match(html, /Know who moved/);
+  assert.match(html, /FOMO live tape/);
+  assert.match(html, /Six feeds\. One decision model\./);
+  assert.match(html, /One feed\. Five ways in\./);
+  assert.match(html, /Watch free\. Pay for your own lane\./);
+  assert.match(html, /From zero to data in three moves\./);
+  assert.match(html, /Questions, answered plainly\./);
   assert.match(html, /Preview data/);
-  assert.match(html, /Right now/);
-  assert.match(html, /My network/);
-  assert.match(html, /\/thesis-first/);
-  assert.match(html, /\/group create core/);
+  assert.doesNotMatch(html, /FOMO Thesis Scout/i);
   assert.doesNotMatch(html, /Building your site|Your site is taking shape/);
 });
 
-test("keeps the command browser compact, complete, and keyboard-ready", async () => {
+test("uses dense comparison and progressive-disclosure patterns", async () => {
   const [page, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /const commandGroups: CommandGroup\[\]/);
-  assert.match(page, /Math\.min\(5, visibleCommands\.length\)/);
-  assert.match(page, /event\.key === "ArrowDown" \|\| event\.key === "ArrowUp"/);
-  assert.match(page, /event\.key === "Home" \|\| event\.key === "End"/);
-  assert.match(page, /role="combobox"/);
-  assert.match(page, /role="listbox"/);
-  assert.match(css, /\.slash-command-list\s*\{[^}]*max-height:\s*210px[^}]*overflow-y:\s*auto/s);
-  assert.match(css, /\.shortcut-groups\s*\{[^}]*overflow-y:\s*auto/s);
-  assert.match(css, /\.shortcut-filters\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*1fr\)/s);
-  assert.match(css, /\.shortcut-groups\s+code\s*\{[^}]*font-size:\s*11px/s);
-  assert.match(css, /\.shortcut-groups\s+span\s*\{[^}]*font-size:\s*10\.5px/s);
-  assert.match(css, /\.situation-row\s*>\s*p\s*\{[^}]*font-size:\s*13px/s);
-  assert.match(css, /\.situation-row\s+dt\s*\{[^}]*font-size:\s*11px/s);
-  assert.match(css, /\.situation-row\s+dd\s*\{[^}]*font-size:\s*11px[^}]*overflow-wrap:\s*anywhere/s);
-  assert.doesNotMatch(css, /\.situation-row\s+dd\s*\{[^}]*white-space:\s*nowrap/s);
-
-  const conversationIndex = page.indexOf('className="conversation"');
-  const dockIndex = page.indexOf('className="chat-dock"');
-  const composerIndex = page.indexOf('className="composer"');
-  assert.ok(conversationIndex >= 0 && dockIndex > conversationIndex && composerIndex > dockIndex);
+  assert.match(page, /const explorerItems: ExplorerItem\[\]/);
+  assert.match(page, /const useCases: UseCase\[\]/);
+  assert.match(page, /aria-pressed=\{selected\}/);
+  assert.match(page, /role="table"/);
+  assert.match(page, /<details>/);
+  assert.match(css, /\.console-grid\s*\{[^}]*grid-template-columns:/s);
+  assert.match(css, /\.leader-row\s*\{/s);
+  assert.match(css, /\.explorer-layout\s*\{[^}]*grid-template-columns:/s);
+  assert.match(css, /@media \(max-width: 720px\)/);
+  assert.doesNotMatch(css, /linear-gradient|radial-gradient|backdrop-filter|box-shadow/);
 });

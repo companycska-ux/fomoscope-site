@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const title = "FOMO Thesis Scout";
-const description = "Evidence-linked thesis intelligence from FOMO's highest-ranked traders.";
+const title = "fomoscope — On-chain trader intelligence API";
+const description = "Leaderboards, live trades, positions, theses, and convergence signals from FOMO—normalized into one developer API.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title,
     description,
-    openGraph: { title, description, type: "website", images: [{ url: imageUrl, width: 1672, height: 941, alt: title }] },
+    openGraph: { title, description, type: "website", images: [{ url: imageUrl, width: 1200, height: 630, alt: "Fomoscope signal intelligence interface" }] },
     twitter: { card: "summary_large_image", title, description, images: [imageUrl] },
   };
 }
